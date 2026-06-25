@@ -595,7 +595,7 @@ private theorem getArrayEntry_writeScaledColumn_below
 
 /-- `writeScaledColumn` only updates entries in column `k`; entries in any
 other column are unchanged. -/
-private theorem getArrayEntry_writeScaledColumn_of_col_ne
+private theorem getArrayEntry_writeScaledColumn
     (coeffs rows : Array (Array Int)) (n k r c : Nat) (hc : c ≠ k) :
     getArrayEntry (writeScaledColumn coeffs rows n k) r c =
       getArrayEntry coeffs r c := by
@@ -924,7 +924,7 @@ private theorem getArrayEntry_stepScaledRows_matches_stepMatrix
 /-- Matrix-level correspondence: one row-mutating `stepScaledRows` array
 update, viewed as a matrix via `rowsToMatrix`, equals the corresponding
 `Matrix.stepMatrix` update on the matrix view of the same row storage. -/
-private theorem rowsToMatrix_stepScaledRows_eq_stepMatrix
+private theorem rowsToMatrix_stepScaledRows_eq
     {n : Nat} (rows : Array (Array Int)) (k : Nat) (pivot prevPivot : Int)
     (hsize : rows.size = n)
     (hrowsize : ∀ (a : Nat), a < n → rows[a]!.size = n) :
@@ -1045,16 +1045,16 @@ private theorem getArrayEntry_scaledCoeffArrayLoop_preserve_col_before_step
         · simp only [hnext, ↓reduceIte]
           by_cases hpivot : getArrayEntry state.matrix state.step state.step = 0
           · simp only [hpivot, ↓reduceIte]
-            rw [getArrayEntry_writeScaledColumn_of_col_ne]
+            rw [getArrayEntry_writeScaledColumn]
             omega
           · simp only [hpivot, ↓reduceIte]
             rw [ih]
-            · rw [getArrayEntry_writeScaledColumn_of_col_ne]
+            · rw [getArrayEntry_writeScaledColumn]
               omega
             · show j < state.step + 1
               omega
         · simp only [hnext, ↓reduceIte]
-          rw [getArrayEntry_writeScaledColumn_of_col_ne]
+          rw [getArrayEntry_writeScaledColumn]
           omega
       · simp only [hstep, ↓reduceIte]
 
@@ -1416,7 +1416,7 @@ depends only on the diagonal cells `rows[k][k]` for `k < j`, the
 row-`i` cells `rows[i][p]` for `p < j`, and the row-`j` cells `rows[j][p]`
 for `p < j`. The hypothesis `0 < j` makes both initial reads `rows[i][0]`
 and `rows[j][0]` fall under `h_i` and `h_j` at `p = 0`. -/
-private theorem schurSigma_congr_of_cell_eq
+private theorem schurSigma_congr
     {rows rows' : Array (Array Int)} {i j : Nat} (hj : 0 < j)
     (h_diag : ∀ k, k < j → getArrayEntry rows k k = getArrayEntry rows' k k)
     (h_i : ∀ p, p < j → getArrayEntry rows i p = getArrayEntry rows' i p)
@@ -1752,7 +1752,7 @@ private theorem getArrayEntry_scaledCoeffRowsSchur_eq_schurScaledCoeffEntry
       have h_sigma :
           schurSigma rowsBeforeC a c =
             schurSigma (scaledCoeffRowsSchur b) a c :=
-        schurSigma_congr_of_cell_eq hcp h_diag_cells h_row_a_cells h_row_c_cells
+        schurSigma_congr hcp h_diag_cells h_row_a_cells h_row_c_cells
       rw [h_diag_prev, h_sigma]
     exact h_entry_congr
 
@@ -2628,7 +2628,7 @@ private theorem noPivotLoop_step_eq_add_of_singularStep_none
 nonzero status of the previous pivot. Regular branches replace `prevPivot` by
 the current nonzero pivot; singular branches contradict the final
 `singularStep = none` hypothesis. -/
-private theorem noPivotLoop_prevPivot_ne_zero_of_singularStep_none
+private theorem noPivotLoop_prevPivot_ne_zero
     {n : Nat} (fuel : Nat) (state : Matrix.BareissState n)
     (hprev : state.prevPivot ≠ 0)
     (h_no_sing : (Matrix.noPivotLoop fuel state).singularStep = none) :
@@ -2687,7 +2687,7 @@ theorem noPivotLoop_step_monotone
 
 /-- A singular step recorded by an initial no-pivot prefix remains the recorded
 singular step after any further no-pivot iterations. -/
-private theorem noPivotLoop_singularStep_of_prefix_singular
+private theorem noPivotLoop_singularStep
     {n : Nat} (a b : Nat) (state : Matrix.BareissState n)
     (h_init : state.singularStep = none) {s : Nat}
     (h_prefix : (Matrix.noPivotLoop a state).singularStep = some s) :
@@ -2737,7 +2737,7 @@ private theorem noPivotLoop_prefix_none_of_final_none
       ⟨k, h_sing, _h_step, _h_zero, _h_bound⟩
   · exact h_none
   · have h_persist :=
-      noPivotLoop_singularStep_of_prefix_singular a b state h_init h_sing
+      noPivotLoop_singularStep a b state h_init h_sing
     rw [h_final] at h_persist
     nomatch h_persist
 
@@ -2753,7 +2753,7 @@ private theorem noPivotLoop_prefix_none_of_final_singular_after
       ⟨k, h_sing, _h_step, _h_zero, _h_bound⟩
   · exact h_none
   · have h_persist :=
-      noPivotLoop_singularStep_of_prefix_singular a b state h_init h_sing
+      noPivotLoop_singularStep a b state h_init h_sing
     rw [h_final] at h_persist
     injection h_persist with hks
     have hk_lt : k.val < state.step + a :=
@@ -2767,7 +2767,7 @@ diagonal entry agrees (after the leading-prefix identification) and
 whose `singularStep` field agrees. This is the executable-loop
 projection needed by the parent assembly of
 `gramDetVecEntry_eq_leadingPrefix_bareiss`. -/
-private theorem noPivotLoop_full_eq_leadingPrefix_at_gramDetVecEntry
+private theorem noPivotLoop_full_eq
     (b : Matrix Int n m) (r : Nat) (hr : r < n) :
     let GM := Matrix.gramMatrix b
     let hK : r + 1 ≤ n := Nat.succ_le_of_lt hr
@@ -2833,7 +2833,7 @@ theorem bareissNoPivotData_diag_eq_leadingPrefix_bareiss_of_prefix_nonsingular
       exact Nat.le_refl r
     exact Matrix.noPivotLoop_diag_of_le_step (n - r) fullAtR (⟨r, hr⟩ : Fin n) h_le
   obtain ⟨h_diag, h_sing⟩ :=
-    noPivotLoop_full_eq_leadingPrefix_at_gramDetVecEntry (b := b) r hr
+    noPivotLoop_full_eq (b := b) r hr
   have h_pref_nonsing :
       (Matrix.noPivotLoop r (Matrix.noPivotInitialState LP)).singularStep = none := by
     rw [← h_sing]
@@ -3549,7 +3549,7 @@ theorem bareissGramRowInvariant_regular_step_coeff_canonical
 /-- If the initial no-pivot Gram pass reaches column `s` without recording a
 singular step, its state step is exactly `s`.  This keeps the later singular
 pivot argument from unfolding the loop just to align the searched column. -/
-private theorem noPivotLoop_initial_gram_step_eq_of_prefix_none
+private theorem noPivotLoop_initial_gram_step_eq
     (b : Matrix Int n m) (s : Nat) (hs : s + 1 < n)
     (h_prefix_none :
       (Matrix.noPivotLoop s
@@ -3567,7 +3567,7 @@ private theorem noPivotLoop_initial_gram_step_eq_of_prefix_none
 
 /-- On a nonsingular initial no-pivot Gram trajectory, any current state that is
 ready for a regular next step has a nonzero previous pivot. -/
-private theorem noPivotLoop_initial_gram_prevPivot_ne_zero_of_regular_prefix
+private theorem noPivotLoop_initial_gram_prevPivot_ne_zero
     (b : Matrix Int n m) (fuel : Nat)
     (h_prefix_none :
       (Matrix.noPivotLoop fuel
@@ -3584,7 +3584,7 @@ private theorem noPivotLoop_initial_gram_prevPivot_ne_zero_of_regular_prefix
             (Matrix.noPivotInitialState (Matrix.gramMatrix b))).step] ≠ 0) :
     (Matrix.noPivotLoop fuel
       (Matrix.noPivotInitialState (Matrix.gramMatrix b))).prevPivot ≠ 0 := by
-  apply noPivotLoop_prevPivot_ne_zero_of_singularStep_none
+  apply noPivotLoop_prevPivot_ne_zero
   · simp [Matrix.noPivotInitialState]
   · exact h_prefix_none
 
@@ -3605,7 +3605,7 @@ private theorem noPivotLoop_initial_gram_findPivot?_eq_none_of_column_zero
           (Matrix.noPivotInitialState (Matrix.gramMatrix b))).matrix
         (⟨s, Nat.lt_of_succ_lt hs⟩ : Fin n) (s + 1) = none := by
   have _h_step :=
-    noPivotLoop_initial_gram_step_eq_of_prefix_none b s hs h_prefix_none
+    noPivotLoop_initial_gram_step_eq b s hs h_prefix_none
   exact Matrix.findPivot?_eq_none_of_zero _ _ _ h_column_zero
 
 /-- After running `noPivotLoop fuel` from a state with `singularStep = none`, if
@@ -3719,7 +3719,7 @@ private theorem bareissGramInitialRegularStep_entry_eq_dot
     Matrix.noPivotLoop fuel
       (Matrix.noPivotInitialState (Matrix.gramMatrix b))
   have hprev : state.prevPivot ≠ 0 :=
-    noPivotLoop_initial_gram_prevPivot_ne_zero_of_regular_prefix
+    noPivotLoop_initial_gram_prevPivot_ne_zero
       b fuel h_prefix_none hnext hp
   have h_processed :
       ∀ i' : Fin n, state.step ≤ i'.val →
@@ -4247,7 +4247,7 @@ private theorem foldl_mul_distrib_int {α : Type v}
 second argument's row combination distributes outside the sum, giving the
 Σ-over-rows form. Proved via the `Hex.Matrix.foldl_det_sum_swap` Fubini
 identity. -/
-private theorem dot_rowCombination_right_eq_foldl_int
+private theorem dot_rowCombination_right_eq
     {n m : Nat} (b : Matrix Int n m) (u : Vector Int m) (c : Vector Int n) :
     Matrix.dot u (Matrix.rowCombination b c) =
       (List.finRange n).foldl
@@ -4324,7 +4324,7 @@ private theorem dot_rowCombination_right_eq_foldl_int
 
 /-- A foldl-style sum whose every term is zero starting from a zero accumulator
 collapses to zero. -/
-private theorem foldl_add_zero_of_terms_zero_int {α : Type v}
+private theorem foldl_add_zero {α : Type v}
     (xs : List α) (f : α → Int)
     (h : ∀ x ∈ xs, f x = 0) :
     xs.foldl (fun acc x => acc + f x) (0 : Int) = 0 := by
@@ -4363,7 +4363,7 @@ and integer positive definiteness forces every dot against `v` to be zero.
 Trailing-block symmetry transports
 `state.matrix[sFin][i] = Matrix.dot v (b.row i) = 0` across the diagonal to
 `state.matrix[i][sFin] = 0`. -/
-private theorem leadingPrefix_gram_zero_pivot_column_zero_of_singular_step
+private theorem leadingPrefix_gram_zero_pivot_column_zero
     {n m : Nat} (b : Matrix Int n m) (s : Nat) (hs : s + 1 < n)
     (hquot : StepWitness b)
     (h_prefix_none :
@@ -4384,7 +4384,7 @@ private theorem leadingPrefix_gram_zero_pivot_column_zero_of_singular_step
   have h_step :
       (Matrix.noPivotLoop s
         (Matrix.noPivotInitialState (Matrix.gramMatrix b))).step = s :=
-    noPivotLoop_initial_gram_step_eq_of_prefix_none b s hs h_prefix_none
+    noPivotLoop_initial_gram_step_eq b s hs h_prefix_none
   have h_state_step_le_sFin :
       (Matrix.noPivotLoop s
         (Matrix.noPivotInitialState (Matrix.gramMatrix b))).step ≤ sFin.val := by
@@ -4426,10 +4426,10 @@ private theorem leadingPrefix_gram_zero_pivot_column_zero_of_singular_step
           (List.finRange n).foldl
             (fun acc k => acc + c[k] * Matrix.dot v (b.row k))
             0 :=
-      dot_rowCombination_right_eq_foldl_int b v c
+      dot_rowCombination_right_eq b v c
     rw [← hv_def] at h_expand_aux
     rw [h_expand_aux]
-    apply foldl_add_zero_of_terms_zero_int
+    apply foldl_add_zero
     intro k _hk
     by_cases hks : k.val ≤ s
     · -- second factor is zero
@@ -4592,7 +4592,7 @@ the loop records the resulting step as singular regardless of any remaining
 fuel beyond the triggering iteration. The partial-pass result is passed
 explicitly as `result` to keep Fin-index proof terms uniform across the
 induction. -/
-private theorem pivotLoop_singularStep_some_of_partial_no_replacement
+private theorem pivotLoop_singularStep_some
     {n : Nat} :
     ∀ (a : Nat) (fuel : Nat) (state : Matrix.BareissState n)
       (result : Matrix.BareissState n)
@@ -4684,7 +4684,7 @@ the `(r + 1)` leading Gram prefix is `Nat.zero`. The proof translates the
 column-zero suffix from the closed row invariant on the full trajectory to the
 leading prefix via the no-pivot sync lemma, then derives `findPivot? = none` on
 the prefix, so the row-pivoted Bareiss loop records the same singular step. -/
-private theorem leadingPrefix_gram_bareiss_toNat_eq_zero_of_noPivot_singular
+private theorem leadingPrefix_gram_bareiss_toNat_eq_zero
     {n m : Nat} (b : Matrix Int n m) (r : Nat) (hr : r < n)
     (hquot : StepWitness b)
     (s : Nat)
@@ -4710,11 +4710,11 @@ private theorem leadingPrefix_gram_bareiss_toNat_eq_zero_of_noPivot_singular
   have hsucc_n : s + 1 ≤ n := Nat.le_of_lt hs1n
   obtain ⟨h_full_none, h_full_step, h_full_zero⟩ :=
     noPivotLoop_prefix_state_at_singular GM r s hsucc_n h_sing
-  -- Step 3: column-zero on FULL via leadingPrefix_gram_zero_pivot_column_zero_of_singular_step.
+  -- Step 3: column-zero on FULL via leadingPrefix_gram_zero_pivot_column_zero.
   have h_full_col_zero :
       ∀ i : Fin n, s + 1 ≤ i.val →
         (Matrix.noPivotLoop s initGM).matrix[i][(⟨s, hsn⟩ : Fin n)] = 0 :=
-    leadingPrefix_gram_zero_pivot_column_zero_of_singular_step
+    leadingPrefix_gram_zero_pivot_column_zero
       (b := b) s hs1n hquot h_full_none h_full_zero
   -- Step 4: sync — leadingPrefix (noPivotLoop s initGM).matrix (r+1) = (noPivotLoop s initLP).matrix.
   have h_sync :=
@@ -4837,7 +4837,7 @@ private theorem leadingPrefix_gram_bareiss_toNat_eq_zero_of_noPivot_singular
     exact (h_step1.trans h_step2).trans h_LP_find_none
   have h_pivot_sing : (Matrix.pivotLoop (r + 1) initLP).singularStep =
       some (Matrix.noPivotLoop s initLP).step :=
-    pivotLoop_singularStep_some_of_partial_no_replacement
+    pivotLoop_singularStep_some
       s (r + 1) initLP (Matrix.noPivotLoop s initLP)
       rfl rfl (by omega) h_LP_sing h_LP_step_lt
       h_LP_zero_at_result h_LP_find_at_result
@@ -5142,7 +5142,7 @@ private theorem scaledCoeffArrayLoop_lower_matches_target_column
             show rowsToMatrix
                 (stepScaledRows state_array.matrix n state_array.step _ state_array.prevPivot) n =
               Matrix.stepMatrix state_matrix.matrix state_matrix.step _ state_matrix.prevPivot
-            rw [rowsToMatrix_stepScaledRows_eq_stepMatrix _ _ _ _ h_array_size
+            rw [rowsToMatrix_stepScaledRows_eq _ _ _ _ h_array_size
               h_array_rows_size, h_matrix_eq, h_pivot_array_eq_matrix, h_step_eq, h_prev_eq]
           have h_prev_new : new_array.prevPivot = new_matrix.prevPivot := h_pivot_array_eq_matrix
           have h_array_size_new : new_array.matrix.size = n := by
@@ -5212,7 +5212,7 @@ private theorem scaledCoeffArrayLoop_lower_singular_after_step
     rw [this, h_matrix_eq]
     exact hp
   rw [scaledCoeffArrayLoop_singular_branch fuel state_array hArrayStep hArrayNext hp_array]
-  rw [getArrayEntry_writeScaledColumn_of_col_ne]
+  rw [getArrayEntry_writeScaledColumn]
   · exact h_coeffs_unwritten i j hsj hji
   · rw [h_step_eq]
     omega
@@ -5221,7 +5221,7 @@ private theorem scaledCoeffArrayLoop_lower_singular_after_step
 When the matrix-side `noPivotLoop` records a singular step strictly before
 reaching column `j`, the array loop halts at the singular column and the
 target column is left at its initial (unwritten) zero value. -/
-private theorem scaledCoeffArrayLoop_lower_zero_of_singular_before_target
+private theorem scaledCoeffArrayLoop_lower_zero
     {state_array : ScaledCoeffArrayState} {state_matrix : Matrix.BareissState n}
     (h_step_eq : state_array.step = state_matrix.step)
     (h_matrix_eq : rowsToMatrix state_array.matrix n = state_matrix.matrix)
@@ -5300,7 +5300,7 @@ private theorem scaledCoeffArrayLoop_lower_zero_of_singular_before_target
                 (stepScaledRows state_array.matrix n state_array.step _
                   state_array.prevPivot) n =
               Matrix.stepMatrix state_matrix.matrix state_matrix.step _ state_matrix.prevPivot
-            rw [rowsToMatrix_stepScaledRows_eq_stepMatrix _ _ _ _ h_array_size
+            rw [rowsToMatrix_stepScaledRows_eq _ _ _ _ h_array_size
               h_array_rows_size, h_matrix_eq, h_pivot_array_eq_matrix, h_step_eq, h_prev_eq]
           have h_prev_new : new_array.prevPivot = new_matrix.prevPivot :=
             h_pivot_array_eq_matrix
@@ -5332,7 +5332,7 @@ private theorem scaledCoeffArrayLoop_lower_zero_of_singular_before_target
             have hsc' : state_matrix.step + 1 < c.val := hsc
             have hc_ne_step : c.val ≠ state_array.step := by
               rw [h_step_eq]; omega
-            rw [getArrayEntry_writeScaledColumn_of_col_ne _ _ _ _ _ _ hc_ne_step]
+            rw [getArrayEntry_writeScaledColumn _ _ _ _ _ _ hc_ne_step]
             exact h_coeffs_unwritten r c (by omega) hcr
           have h_no_sing_new : new_matrix.singularStep = none := rfl
           have h_step_le_j_new : new_matrix.step ≤ j.val := by
@@ -5430,7 +5430,7 @@ private theorem scaledCoeffArrayLoop_diag_matches
             change getArrayEntry
               (writeScaledColumn state_array.coeffs state_array.matrix n state_array.step) i.val i.val =
               state_matrix.matrix[i][i]
-            rw [getArrayEntry_writeScaledColumn_of_col_ne _ _ _ _ _ _
+            rw [getArrayEntry_writeScaledColumn _ _ _ _ _ _
               (show i.val ≠ state_array.step by rw [h_step_eq]; omega)]
             exact h_coeffs_processed i.val h_ilt i.isLt
           · have h_ilt : state_matrix.step ≤ i.val := Nat.le_of_not_lt h_ilt
@@ -5458,7 +5458,7 @@ private theorem scaledCoeffArrayLoop_diag_matches
               change getArrayEntry
                 (writeScaledColumn state_array.coeffs state_array.matrix n state_array.step) i.val i.val =
                 0
-              rw [getArrayEntry_writeScaledColumn_of_col_ne _ _ _ _ _ _
+              rw [getArrayEntry_writeScaledColumn _ _ _ _ _ _
                 (show i.val ≠ state_array.step by rw [h_step_eq]; omega)]
               exact h_coeffs_unwritten i.val (Nat.le_of_lt h_igt) i.isLt
         · -- A2: regular branch.
@@ -5489,7 +5489,7 @@ private theorem scaledCoeffArrayLoop_diag_matches
             show rowsToMatrix
                 (stepScaledRows state_array.matrix n state_array.step _ state_array.prevPivot) n =
               Matrix.stepMatrix state_matrix.matrix state_matrix.step _ state_matrix.prevPivot
-            rw [rowsToMatrix_stepScaledRows_eq_stepMatrix _ _ _ _ h_array_size
+            rw [rowsToMatrix_stepScaledRows_eq _ _ _ _ h_array_size
               h_array_rows_size, h_matrix_eq, h_pivot_array_eq_matrix, h_step_eq, h_prev_eq]
           have h_prev_new : new_array.prevPivot = new_matrix.prevPivot := h_pivot_array_eq_matrix
           have h_no_sing_new : new_matrix.singularStep = none := rfl
@@ -5538,7 +5538,7 @@ private theorem scaledCoeffArrayLoop_diag_matches
               rw [getArrayEntry_eq_rowsToMatrix state_array.matrix jFin jFin]
               rw [h_matrix_eq]
             · have hj_lt : j < state_matrix.step := Nat.lt_of_le_of_ne hj_le hj_eq
-              rw [getArrayEntry_writeScaledColumn_of_col_ne _ _ _ _ _ _
+              rw [getArrayEntry_writeScaledColumn _ _ _ _ _ _
                 (show j ≠ state_array.step by rw [h_step_eq]; omega)]
               exact h_coeffs_processed j hj_lt hjn
           have h_coeffs_unwritten_new :
@@ -5547,7 +5547,7 @@ private theorem scaledCoeffArrayLoop_diag_matches
             intro j hjs hjn
             show getArrayEntry (writeScaledColumn _ _ _ _) j j = 0
             have hj_gt : state_matrix.step < j := hjs
-            rw [getArrayEntry_writeScaledColumn_of_col_ne _ _ _ _ _ _
+            rw [getArrayEntry_writeScaledColumn _ _ _ _ _ _
               (show j ≠ state_array.step by rw [h_step_eq]; omega)]
             exact h_coeffs_unwritten j (Nat.le_of_lt hj_gt) hjn
           have h_fuel_new : i.val < new_matrix.step + fuel' ∨ i.val < new_matrix.step := by
@@ -5585,7 +5585,7 @@ private theorem scaledCoeffArrayLoop_diag_matches
             rw [h_matrix_eq]
           · by_cases h_ilt : i.val < state_matrix.step
             · change getArrayEntry (writeScaledColumn _ _ _ _) i.val i.val = _
-              rw [getArrayEntry_writeScaledColumn_of_col_ne _ _ _ _ _ _
+              rw [getArrayEntry_writeScaledColumn _ _ _ _ _ _
                 (show i.val ≠ state_array.step by rw [h_step_eq]; omega)]
               exact h_coeffs_processed i.val h_ilt i.isLt
             · have h_ilt : state_matrix.step ≤ i.val := Nat.le_of_not_lt h_ilt
@@ -5691,7 +5691,7 @@ private theorem gramDetVecEntry_eq_leadingPrefix_bareiss
           (Matrix.bareiss
             (Matrix.leadingPrefix (Matrix.gramMatrix b) (r + 1)
               (Nat.succ_le_of_lt hr))).toNat = 0 :=
-        leadingPrefix_gram_bareiss_toNat_eq_zero_of_noPivot_singular
+        leadingPrefix_gram_bareiss_toNat_eq_zero
           (b := b) r hr hquot k.val (by simpa [GM, init] using h_sing_r)
       rw [hright]
       simpa [data, GM] using hleft
@@ -6170,7 +6170,7 @@ private theorem rowCombination_prefix_castIntMatrix_getElem
 vector has all entries above index `k` equal to zero, the cast of the integer
 row combination is the row combination of the first `k.val + 1` cast rows with
 the prefix coefficient vector `prefixCoeffsCast c k`. -/
-private theorem cast_rowCombination_eq_prefix_rowCombination
+private theorem cast_rowCombination_eq
     (b : Matrix Int n m) (c : Vector Int n) (k : Fin n)
     (hzero : ∀ j : Fin n, k.val < j.val → c[j] = 0) :
     Vector.map (fun x : Int => (x : Rat)) (Matrix.rowCombination b c) =
@@ -6221,14 +6221,14 @@ private theorem cast_rowCombination_eq_prefix_rowCombination
 the zero-tail hypothesis, the cast of an integer row combination lies in the
 prefix span of the first `k.val + 1` cast input rows, with `prefixCoeffsCast c k`
 as the explicit witness. -/
-private theorem prefixSpan_castIntMatrix_of_rowCombination
+private theorem prefixSpan_castIntMatrix
     (b : Matrix Int n m) (c : Vector Int n) (k : Fin n)
     (hzero : ∀ j : Fin n, k.val < j.val → c[j] = 0) :
     GramSchmidt.prefixSpan (castIntMatrix b) k.val k.isLt
       (Vector.map (fun x : Int => (x : Rat)) (Matrix.rowCombination b c)) :=
-  ⟨prefixCoeffsCast c k, (cast_rowCombination_eq_prefix_rowCombination b c k hzero).symm⟩
+  ⟨prefixCoeffsCast c k, (cast_rowCombination_eq b c k hzero).symm⟩
 
-/-- Transport of `prefixSpan_castIntMatrix_of_rowCombination` through
+/-- Transport of `prefixSpan_castIntMatrix` through
 `basis_span`: the cast integer row combination also lies in the prefix span of
 the first `k.val + 1` Gram-Schmidt basis rows. -/
 theorem prefixSpan_basis_of_rowCombination
@@ -6237,7 +6237,7 @@ theorem prefixSpan_basis_of_rowCombination
     GramSchmidt.prefixSpan (basis b) k.val k.isLt
       (Vector.map (fun x : Int => (x : Rat)) (Matrix.rowCombination b c)) :=
   (basis_span b k.val k.isLt _).mpr
-    (prefixSpan_castIntMatrix_of_rowCombination b c k hzero)
+    (prefixSpan_castIntMatrix b c k hzero)
 
 /-- Package the prefix-span witness together with the recovered top
 Gram-Schmidt coordinate for a lattice row combination whose integer
@@ -6741,7 +6741,7 @@ agrees with the value on the bordered minor of `gramMatrix b` whose border
 row/column are swapped. The proof composes the symmetry of `gramMatrix` (via
 `noPivotLoop_borderedMinor_swap_at_trailing`) with the definitional identity
 `scaledCoeffMatrix_eq_borderedMinor`. -/
-private theorem noPivotLoop_scaledCoeffMatrix_eq_borderedMinor_at_trailing
+private theorem noPivotLoop_scaledCoeffMatrix_eq
     (b : Matrix Int n m) (i j : Fin n) (hji : j.val < i.val) :
     (Matrix.noPivotLoop j.val
         (Matrix.noPivotInitialState
@@ -6766,7 +6766,7 @@ matches the trailing entry of the no-pivot Bareiss-style loop on the
 corresponding Cramer determinant matrix `scaledCoeffMatrix b i j hji`. This
 composes `scaledCoeffArrayLoop_lower_matches_target_column` (from #4103),
 `noPivotLoop_full_eq_borderedMinor_at_trailing` (from #4028), and the
-symmetry/transpose equation `noPivotLoop_scaledCoeffMatrix_eq_borderedMinor_at_trailing`. -/
+symmetry/transpose equation `noPivotLoop_scaledCoeffMatrix_eq`. -/
 theorem scaledCoeffRows_lower_eq_noPivotLoop_scaledCoeffMatrix
     (b : Matrix Int n m) (i j : Fin n) (hji : j.val < i.val)
     (h_nonsing :
@@ -6815,7 +6815,7 @@ theorem scaledCoeffRows_lower_eq_noPivotLoop_scaledCoeffMatrix
   rw [h_bm]
   -- Step 3: symmetry/transpose equation to `scaledCoeffMatrix`.
   exact
-    (noPivotLoop_scaledCoeffMatrix_eq_borderedMinor_at_trailing b i j hji).symm
+    (noPivotLoop_scaledCoeffMatrix_eq b i j hji).symm
 
 /-- Singular dual of `scaledCoeffRows_lower_eq_noPivotLoop_scaledCoeffMatrix`,
 phrased on the Bareiss-array path. When the no-pivot Bareiss pass over the
@@ -6833,7 +6833,7 @@ private theorem scaledCoeffRows_eq_zero_of_singularStep_lt
           (Matrix.noPivotInitialState (Matrix.gramMatrix b))).singularStep = some s := by
     simpa using h_sing
   have h_zero :=
-    scaledCoeffArrayLoop_lower_zero_of_singular_before_target
+    scaledCoeffArrayLoop_lower_zero
       (state_array :=
         { step := 0
           matrix := gramRows b
@@ -6864,7 +6864,7 @@ the no-pivot Bareiss pass over the full Gram matrix has not recorded a
 singular step before reaching column `j`, the executable scaled-coefficient
 array entry below the diagonal at `(i, j)` matches the matrix-level diagonal
 of `noPivotLoop` at fuel `j` on `gramMatrix b`. -/
-private theorem scaledCoeffRows_lower_eq_noPivotLoop_gramMatrix_of_no_singular
+private theorem scaledCoeffRows_lower_eq
     (b : Matrix Int n m) (i j : Fin n) (hji : j.val < i.val)
     (h_nonsing :
       (Matrix.noPivotLoop j.val
@@ -7012,7 +7012,7 @@ private theorem scaledCoeffRows_diag_eq_noPivotLoop_gramMatrix_of_no_singular
 over the full Gram matrix records a singular step strictly before column `j`,
 the executable scaled-coefficient array entry on the diagonal at `(j, j)` is
 zero. The proof composes `scaledCoeffArrayLoop_diag_matches` at fuel `n` with
-the persistence lemma `noPivotLoop_singularStep_of_prefix_singular`. -/
+the persistence lemma `noPivotLoop_singularStep`. -/
 private theorem scaledCoeffRows_diag_eq_zero_of_singularStep_lt
     (b : Matrix Int n m) (j : Fin n)
     (s : Nat) (hsj : s < j.val)
@@ -7030,7 +7030,7 @@ private theorem scaledCoeffRows_diag_eq_zero_of_singularStep_lt
     rw [h_split]
   have h_sing_full' :
       (Matrix.noPivotLoop (j.val + (n - j.val)) init).singularStep = some s :=
-    noPivotLoop_singularStep_of_prefix_singular j.val (n - j.val) init rfl h_sing
+    noPivotLoop_singularStep j.val (n - j.val) init rfl h_sing
   have h_sing_full : (Matrix.noPivotLoop n init).singularStep = some s := by
     rw [← h_persist_split]; exact h_sing_full'
   have hdiag :=
@@ -7075,7 +7075,7 @@ private theorem scaledCoeffRows_diag_eq_zero_of_singularStep_lt
 /-- On a non-singular initial Gram trajectory, the diagonal pivot at step `q`
 is nonzero whenever `q + 1` iterations stay non-singular. The (`q + 1`)-th
 iteration would otherwise record a singular step at `q`. -/
-private theorem noPivotLoop_initial_gram_diag_ne_zero_of_lt
+private theorem noPivotLoop_initial_gram_diag_ne_zero
     (b : Matrix Int n m) (p q : Nat) (hq : q < p) (hpn : p < n)
     (h_nonsing :
       (Matrix.noPivotLoop p
@@ -7103,7 +7103,7 @@ private theorem noPivotLoop_initial_gram_diag_ne_zero_of_lt
   have hqn : q < n := Nat.lt_trans hq hpn
   have h_step_q :
       (Matrix.noPivotLoop q state₀).step = q :=
-    noPivotLoop_initial_gram_step_eq_of_prefix_none b q (by omega) h_prefix_none
+    noPivotLoop_initial_gram_step_eq b q (by omega) h_prefix_none
   -- The (q+1)-th iteration: starting from state with step = q, matrix[q][q] = 0,
   -- it records singularStep := some q.
   have hDone : (Matrix.noPivotLoop q state₀).step + 1 < n := by
@@ -7181,7 +7181,7 @@ private theorem schurSigma_noPivotCorrection_succ
 σ-update fold for position `(a, p_out)`, the cumulative fold value equals
 the algebraic closed form `matrix_q[q][q] * gram - matrix_(q+1)[a][p_out]`.
 Proved by induction on `q`. -/
-private theorem schurSigma_foldl_eq_noPivotCorrection
+private theorem schurSigma_foldl_eq
     {n m : Nat} (b : Matrix Int n m) (hquot : StepWitness b)
     (a p_out q : Nat) (hp_out_n : p_out < n) (han : a < n) (hpa : p_out ≤ a)
     (hq_lt_pout : q < p_out)
@@ -7254,7 +7254,7 @@ private theorem schurSigma_foldl_eq_noPivotCorrection
           (Matrix.noPivotInitialState (Matrix.gramMatrix b)).step][
           (Matrix.noPivotInitialState (Matrix.gramMatrix b)).step] ≠ 0 := by
       simpa [Matrix.noPivotInitialState] using
-        noPivotLoop_initial_gram_diag_ne_zero_of_lt
+        noPivotLoop_initial_gram_diag_ne_zero
           (b := b) p_out 0 hp_out_pos hp_out_n h_nonsing
     rw [Matrix.noPivotLoop_regular_branch 0
         (Matrix.noPivotInitialState (Matrix.gramMatrix b)) hDone hpivot]
@@ -7288,9 +7288,9 @@ private theorem schurSigma_foldl_eq_noPivotCorrection
       rw [h_eq]; exact h_nonsing
     -- step matches fuel under non-singular prefix.
     have h_step_q' : (Matrix.noPivotLoop q' state₀).step = q' :=
-      noPivotLoop_initial_gram_step_eq_of_prefix_none b q' (by omega) h_prefix_q'_none
+      noPivotLoop_initial_gram_step_eq b q' (by omega) h_prefix_q'_none
     have h_step_q'_succ : (Matrix.noPivotLoop (q' + 1) state₀).step = q' + 1 :=
-      noPivotLoop_initial_gram_step_eq_of_prefix_none b (q' + 1) (by omega)
+      noPivotLoop_initial_gram_step_eq b (q' + 1) (by omega)
         h_prefix_q'_succ_none
     -- Apply the inductive hypothesis at q'.
     have ih_eq :=
@@ -7338,7 +7338,7 @@ private theorem schurSigma_foldl_eq_noPivotCorrection
               Nat.lt_of_succ_lt hDone⟩ : Fin n) = (⟨q', hq'_n⟩ : Fin n) :=
         Fin.ext h_step_q'
       have h_diag_at_q' :=
-        noPivotLoop_initial_gram_diag_ne_zero_of_lt b (q' + 1) q'
+        noPivotLoop_initial_gram_diag_ne_zero b (q' + 1) q'
           (Nat.lt_succ_self q') hq'_succ_n h_prefix_q'_succ_none
       have h_eq_diag :
           (Matrix.noPivotLoop q' state₀).matrix[
@@ -7393,7 +7393,7 @@ private theorem schurSigma_foldl_eq_noPivotCorrection
                 Nat.lt_of_succ_lt hDone⟩ : Fin n)][
               (⟨(Matrix.noPivotLoop (q' + 1) state₀).step,
                 Nat.lt_of_succ_lt hDone⟩ : Fin n)] ≠ 0 := by
-        have h_diag := noPivotLoop_initial_gram_diag_ne_zero_of_lt b p_out (q' + 1)
+        have h_diag := noPivotLoop_initial_gram_diag_ne_zero b p_out (q' + 1)
           hq'_succ_lt hp_out_n h_nonsing
         have h_idx :
             (⟨(Matrix.noPivotLoop (q' + 1) state₀).step,
@@ -7445,7 +7445,7 @@ private theorem schurSigma_foldl_eq_noPivotCorrection
           (Matrix.noPivotLoop (q' + 1) state₀).step][
           (Matrix.noPivotLoop (q' + 1) state₀).step] ≠ 0 := by
       have h_diag_ne :=
-        noPivotLoop_initial_gram_diag_ne_zero_of_lt b p_out (q' + 1)
+        noPivotLoop_initial_gram_diag_ne_zero b p_out (q' + 1)
           hq'_succ_lt hp_out_n h_nonsing
       have h_step_lt_n :
           (Matrix.noPivotLoop (q' + 1) state₀).step < n := by
@@ -7534,7 +7534,7 @@ private theorem schurSigma_foldl_eq_noPivotCorrection
     have hdenom_ne :
         (Matrix.noPivotLoop q' state₀).matrix[
           (⟨q', hq'_n⟩ : Fin n)][(⟨q', hq'_n⟩ : Fin n)] ≠ 0 :=
-      noPivotLoop_initial_gram_diag_ne_zero_of_lt b (q' + 1) q'
+      noPivotLoop_initial_gram_diag_ne_zero b (q' + 1) q'
         (Nat.lt_succ_self q') hq'_succ_n h_prefix_q'_succ_none
     -- Now expand the fold: range' 1 (q' + 1) = range' 1 q' ++ [q' + 1].
     have h_concat :
@@ -7574,7 +7574,7 @@ column-zero boundary of the Schur kernel together with `noPivotLoop` at
 zero fuel returning the initial Gram state. The step case `q' + 1` rewrites
 the Schur recurrence `rows[c][q' + 1] = rows[q'][q'] · gram[c][q' + 1] -
 schurSigma rows c (q' + 1)` and discharges the σ-chain via
-`schurSigma_foldl_eq_noPivotCorrection` at `p_out = q' + 1`, fed with the
+`schurSigma_foldl_eq` at `p_out = q' + 1`, fed with the
 σ-fold correspondence assembled from the strong inductive hypothesis. -/
 theorem getArrayEntry_scaledCoeffRowsSchur_eq_noPivotLoop_of_nonsing
     {n m : Nat} (b : Matrix Int n m) (hquot : StepWitness b)
@@ -7655,7 +7655,7 @@ theorem getArrayEntry_scaledCoeffRowsSchur_eq_noPivotLoop_of_nonsing
                 (Matrix.noPivotInitialState (Matrix.gramMatrix b))).matrix[
               (⟨a, han⟩ : Fin n)][(⟨q' + 1, hqn⟩ : Fin n)] := by
         intro a han hpa
-        have h_fold := schurSigma_foldl_eq_noPivotCorrection b hquot a (q' + 1) q'
+        have h_fold := schurSigma_foldl_eq b hquot a (q' + 1) q'
           hqn han hpa hq'_lt_succ h_nonsing correspondence
         show (Id.run do
               let mut sigma :=
@@ -7710,7 +7710,7 @@ The row-`s` column is cleared by combining the non-singular Schur≡Bareiss
 correspondence at fuel `s`
 (`getArrayEntry_scaledCoeffRowsSchur_eq_noPivotLoop_of_nonsing`) with the
 column-zero structural lemma at the singular step
-(`leadingPrefix_gram_zero_pivot_column_zero_of_singular_step`). Strong
+(`leadingPrefix_gram_zero_pivot_column_zero`). Strong
 induction on `j' ∈ (s, j]` then propagates the zeros via the Schur recurrence
 `rows[i'][j'] = rows[j'-1][j'-1] · gram[i'][j'] - schurSigma i' j'`. The
 diagonal factor `rows[j'-1][j'-1]` is zero by the row-`s` lemma when
@@ -7746,7 +7746,7 @@ theorem getArrayEntry_scaledCoeffRowsSchur_eq_zero_of_singularStep_lt
     · have hc_gt : s < c := Nat.lt_of_le_of_ne hcs (Ne.symm hcs_eq)
       have hs_succ_lt_n : s + 1 < n := Nat.lt_of_le_of_lt hc_gt hcn
       rw [h_corr_at_s.2 c hc_gt hcn]
-      exact leadingPrefix_gram_zero_pivot_column_zero_of_singular_step
+      exact leadingPrefix_gram_zero_pivot_column_zero
         b s hs_succ_lt_n hquot h_s_prefix_none h_s_diag_zero ⟨c, hcn⟩ hc_gt
   -- Strong induction on `j'` ∈ (s, j].
   suffices h_cascade : ∀ (j' : Nat), j' ≤ j → s < j' →
@@ -7909,7 +7909,7 @@ theorem getArrayEntry_scaledCoeffRowsSchur_eq
               (getArrayEntry_scaledCoeffRowsSchur_eq_noPivotLoop_of_nonsing
                 b hquot j hjn h_sing).2 i hji_lt hin
             have h_bareiss :=
-              scaledCoeffRows_lower_eq_noPivotLoop_gramMatrix_of_no_singular
+              scaledCoeffRows_lower_eq
                 b iFin jFin hji_lt h_sing
             rw [h_schur, h_bareiss]
         | some s =>
