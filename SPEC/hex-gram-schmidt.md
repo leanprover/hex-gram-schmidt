@@ -333,7 +333,7 @@ for the analogous rule on the matrix side.
 No external comparator is required.
 
 **Justification:** `structural-layer` per
-`SPEC/benchmarking.md §"Comparator naming"`. HexGramSchmidt is a
+[the benchmarking spec's "Comparator naming" section](https://github.com/kim-em/hex-dev/blob/main/SPEC/benchmarking.md#comparator-naming). HexGramSchmidt is a
 structural layer over `HexMatrix`: the integer Gram-Schmidt
 construction is implemented via the per-row Schur-complement
 recurrence specified for `scaledCoeffs` above, with the diagonal

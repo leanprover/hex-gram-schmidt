@@ -1059,7 +1059,15 @@ private theorem getArrayEntry_scaledCoeffArrayLoop_preserve_col_before_step
       · simp only [hstep, ↓reduceIte]
 
 /-- Run one no-pivot fraction-free Gram elimination and record each scaled
-coefficient column immediately before the elimination step zeroes it. -/
+coefficient column immediately before the elimination step zeroes it.
+
+This is the **reference formulation** of the scaled-coefficient matrix, kept
+for proofs rather than execution. The live algorithm runs `scaledCoeffRowsSchur`
+(the per-row Schur recurrence below); `getArrayEntry_scaledCoeffRowsSchur_eq`
+proves the two agree entry-for-entry, and that bridge is what connects
+`scaledCoeffRowsSchur` to `gramDet` / `scaledCoeffs`. Do not remove this
+formulation as "unused": deleting it breaks the correctness proof of the live
+path. -/
 def scaledCoeffRows (b : Matrix Int n m) : Array (Array Int) :=
   let state :=
     scaledCoeffArrayLoop n n
