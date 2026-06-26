@@ -1,7 +1,7 @@
 module
 
-public import HexGramSchmidt.Int.Canonical
-import all HexGramSchmidt.Int.Canonical
+public import HexGramSchmidt.Int.Correspondence
+import all HexGramSchmidt.Int.Correspondence
 
 public section
 
