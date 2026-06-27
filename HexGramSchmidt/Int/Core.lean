@@ -1090,6 +1090,12 @@ def scaledCoeffRows (b : Matrix Int n m) : Array (Array Int) :=
         prevPivot := 1 }
   state.coeffs
 
+/-- Schur-complement σ-chain for the fraction-free scaled Gram-Schmidt
+recurrence. Each step divides by the previous diagonal pivot `rows[p-1][p-1]`
+via `Matrix.exactDiv`; that division is **exact** — the fraction-free Bareiss
+invariant guarantees the numerator is divisible by the pivot, so `sigma` stays
+an integer bounded by a minor determinant rather than growing as an unreduced
+fraction. -/
 @[expose]
 def schurSigma (rows : Array (Array Int)) (i j : Nat) : Int :=
   Id.run do
