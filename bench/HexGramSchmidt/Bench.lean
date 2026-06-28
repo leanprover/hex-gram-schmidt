@@ -240,6 +240,7 @@ def runAdjacentSwapScaledCoeffAboveCurrNumerator (input : UpdateInput) : Int :=
   GramSchmidt.Int.adjacentSwapScaledCoeffAboveCurrNumerator
     input.matrix input.aboveK input.aboveHK input.aboveI
 
+-- Declared cost-model derivation: O(gramSurfaceComplexity n) in the parameter `n`.
 setup_benchmark runGramDetVecChecksum n => gramSurfaceComplexity n
   with prep := prepIntBasisInput
   where {
@@ -251,6 +252,7 @@ setup_benchmark runGramDetVecChecksum n => gramSurfaceComplexity n
     signalFloorMultiplier := 1.0
   }
 
+-- Declared cost-model derivation: O(scaledCoeffSurfaceComplexity n) in the parameter `n`.
 setup_benchmark runScaledCoeffsChecksum n => scaledCoeffSurfaceComplexity n
   with prep := prepIntBasisInput
   where {
@@ -262,6 +264,7 @@ setup_benchmark runScaledCoeffsChecksum n => scaledCoeffSurfaceComplexity n
     signalFloorMultiplier := 1.0
   }
 
+-- Declared cost-model derivation: O(rowUpdateComplexity n) in the parameter `n`.
 setup_benchmark runSizeReduceChecksum n => rowUpdateComplexity n
   with prep := prepUpdateInput
   where {
@@ -273,6 +276,7 @@ setup_benchmark runSizeReduceChecksum n => rowUpdateComplexity n
     signalFloorMultiplier := 1.0
   }
 
+-- Declared cost-model derivation: O(rowUpdateComplexity n) in the parameter `n`.
 setup_benchmark runAdjacentSwapChecksum n => rowUpdateComplexity n
   with prep := prepUpdateInput
   where {
@@ -288,6 +292,7 @@ setup_benchmark runAdjacentSwapChecksum n => rowUpdateComplexity n
 `runAdjacentSwapDenom` calls `gramDet b k` with `k = rows - 1`. The dominant
 work is building the leading Gram surface and Bareiss-eliminating it, so the
 fixture parameter maps to `gramSurfaceComplexity (n + 3)`. -/
+-- Declared cost-model derivation: O(updateGramComplexity n) in the parameter `n`.
 setup_benchmark runAdjacentSwapDenom n => updateGramComplexity n
   with prep := prepUpdateInput
   where {
@@ -305,6 +310,7 @@ that shared-elimination surface is the dominant step, giving
 `scaledCoeffSurfaceComplexity (n + 3)`. The ladder starts after the smallest
 cold rungs used for the full surface benchmark because this scalar helper
 otherwise spends too much of its signal on fixed evaluator overhead. -/
+-- Declared cost-model derivation: O(updateScaledCoeffComplexity n) in the parameter `n`.
 setup_benchmark runAdjacentSwapPivotCoeff n => updateScaledCoeffComplexity n
   with prep := prepUpdateInput
   where {
@@ -320,6 +326,7 @@ setup_benchmark runAdjacentSwapPivotCoeff n => updateScaledCoeffComplexity n
 Under `prepUpdateInput n`, `rows = n + 3`; the pivot coefficient constructs
 the dense `scaledCoeffs` surface, which dominates the scalar arithmetic and
 Gram determinant calls. -/
+-- Declared cost-model derivation: O(updateScaledCoeffComplexity n) in the parameter `n`.
 setup_benchmark runAdjacentSwapGramDetNumerator n => updateScaledCoeffComplexity n
   with prep := prepUpdateInput
   where {
@@ -334,6 +341,7 @@ setup_benchmark runAdjacentSwapGramDetNumerator n => updateScaledCoeffComplexity
 /- The quotient adds one denominator call to the numerator path. With
 `rows = n + 3`, the numerator's dense `scaledCoeffs` construction remains the
 dominant step, so the model is still `scaledCoeffSurfaceComplexity (n + 3)`. -/
+-- Declared cost-model derivation: O(updateScaledCoeffComplexity n) in the parameter `n`.
 setup_benchmark runAdjacentSwapGramDetQuotient n => updateScaledCoeffComplexity n
   with prep := prepUpdateInput
   where {

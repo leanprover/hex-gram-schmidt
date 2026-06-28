@@ -9,7 +9,7 @@ rev = "v4.30.0-rc2"
 [[require]]
 name = "HexMatrix"
 git = "https://github.com/kim-em/hex-matrix.git"
-rev = "85c2bb9b2f93677fe1435d898c81a56b9e7b33e8"
+rev = "64db1edd0e35f9b22831f628942525a112812996"
 
 [[lean_lib]]
 name = "HexGramSchmidt"
