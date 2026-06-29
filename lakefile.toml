@@ -2,14 +2,24 @@ name = "hex-gram-schmidt"
 defaultTargets = ["HexGramSchmidt"]
 
 [[require]]
-name = "batteries"
-git = "https://github.com/leanprover-community/batteries.git"
-rev = "v4.30.0-rc2"
-
-[[require]]
 name = "HexMatrix"
 git = "https://github.com/kim-em/hex-matrix.git"
 rev = "3de422434b4565933a0315338e714f303bb6442f"
+
+[[require]]
+name = "HexRowReduce"
+git = "https://github.com/kim-em/hex-row-reduce.git"
+rev = "6f74957923eb2b9477d1028c5586836d46cfea46"
+
+[[require]]
+name = "HexDeterminant"
+git = "https://github.com/kim-em/hex-determinant.git"
+rev = "a355e2a133e5723ac00f167074b2c8f6a72be658"
+
+[[require]]
+name = "HexBareiss"
+git = "https://github.com/kim-em/hex-bareiss.git"
+rev = "3a65f8d3ade3644a6098b00ff4af8a2ddaa3fe5b"
 
 [[lean_lib]]
 name = "HexGramSchmidt"
