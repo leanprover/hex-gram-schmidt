@@ -4,27 +4,27 @@ defaultTargets = ["HexGramSchmidt"]
 [[require]]
 name = "HexBasic"
 git = "https://github.com/kim-em/hex-basic.git"
-rev = "49d4eb822ce66aa14b18c2472c18848a2411792d"
+rev = "c9cb6bcb3287ea0870f66c9dfcba08baa08f97f6"
 
 [[require]]
 name = "HexMatrix"
 git = "https://github.com/kim-em/hex-matrix.git"
-rev = "a84b3d2bd4186eaebcabbffe0f8bae32b752eccb"
+rev = "d47efb355647c3ab888a035ecfe395be286f2881"
 
 [[require]]
 name = "HexRowReduce"
 git = "https://github.com/kim-em/hex-row-reduce.git"
-rev = "962bf360dd394acd319ab8f2d632d6809cbc1340"
+rev = "30839abafa39e1a93ddc1e586a3d57e2f4daa0c6"
 
 [[require]]
 name = "HexDeterminant"
 git = "https://github.com/kim-em/hex-determinant.git"
-rev = "7b9428bf69a29b70986bedccbdd4f92c8d982784"
+rev = "fc7b52c3d37e1dace152b691799fe752a1b88bac"
 
 [[require]]
 name = "HexBareiss"
 git = "https://github.com/kim-em/hex-bareiss.git"
-rev = "25c67906f895d21a4de457407635bfd097356db7"
+rev = "9dfceef81b598704c15aec29f7817e2cca087902"
 
 [[lean_lib]]
 name = "HexGramSchmidt"
