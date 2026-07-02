@@ -3,28 +3,28 @@ defaultTargets = ["HexGramSchmidt"]
 
 [[require]]
 name = "HexBasic"
-git = "https://github.com/kim-em/hex-basic.git"
+git = "https://github.com/leanprover/hex-basic.git"
 rev = "f1580d28c2e9ff9e8d4d7cdef9dccbaa17780b03"
 
 [[require]]
 name = "HexMatrix"
-git = "https://github.com/kim-em/hex-matrix.git"
-rev = "7359d9c53c3d85309b526dd1663a33b28a28bf50"
+git = "https://github.com/leanprover/hex-matrix.git"
+rev = "42c865718206dc1c2e63e3fc0ebb94db8174bd12"
 
 [[require]]
 name = "HexRowReduce"
-git = "https://github.com/kim-em/hex-row-reduce.git"
-rev = "48a6d92ac69e1fd6b3b1a86be9cb793a76e000c2"
+git = "https://github.com/leanprover/hex-row-reduce.git"
+rev = "45d47a67f4300792df1e371e099b9ac6862273f0"
 
 [[require]]
 name = "HexDeterminant"
-git = "https://github.com/kim-em/hex-determinant.git"
-rev = "8ce401452f1cfcf714d46887440d7d4341177818"
+git = "https://github.com/leanprover/hex-determinant.git"
+rev = "b72a8d00388501d203aea57152ed211952412c96"
 
 [[require]]
 name = "HexBareiss"
-git = "https://github.com/kim-em/hex-bareiss.git"
-rev = "733e2937905ad612423d86a2e39d345fd72ed8ac"
+git = "https://github.com/leanprover/hex-bareiss.git"
+rev = "55b20c9d74ad4becd967bdf8ec3ddeaccd392f94"
 
 [[lean_lib]]
 name = "HexGramSchmidt"
