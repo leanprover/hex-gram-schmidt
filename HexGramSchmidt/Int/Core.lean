@@ -92,9 +92,12 @@ def memLattice (b : Matrix Int n m) (v : Vector Int m) : Prop :=
   ∃ c : Vector Int n, Matrix.vecMul c b = v
 
 /-- The `k`-th Gram determinant: the determinant of the `k × k` leading
-principal Gram matrix of the integer input. -/
+principal Gram matrix of the integer input.
+
+The bound `hk : k ≤ n` defaults to `by omega`, so callers with a concrete `k`
+and `n` (as in `#guard`s and examples) can omit it. -/
 @[expose]
-def gramDet (b : Matrix Int n m) (k : Nat) (hk : k ≤ n) : Nat :=
+def gramDet (b : Matrix Int n m) (k : Nat) (hk : k ≤ n := by omega) : Nat :=
   (Matrix.bareiss (GramSchmidt.leadingGramMatrixInt b k hk)).toNat
 
 /-- Linear independence of the row prefix determinants used by the
@@ -108,7 +111,7 @@ def independent (b : Matrix Int n m) : Prop :=
 @[expose]
 noncomputable def gramSchmidtNormProduct (b : Matrix Int n m) (k : Nat) (hk : k ≤ n) :
     Rat :=
-  (List.finRange k).foldl
+  Fin.foldl k
     (fun acc j =>
       let jn : Fin n := ⟨j.val, Nat.lt_of_lt_of_le j.isLt hk⟩
       acc * ((basis b).row jn).normSq)
