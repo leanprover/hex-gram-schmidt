@@ -9,22 +9,22 @@ rev = "f1580d28c2e9ff9e8d4d7cdef9dccbaa17780b03"
 [[require]]
 name = "HexMatrix"
 git = "https://github.com/leanprover/hex-matrix.git"
-rev = "db6b7f7aebf6d1fb193016cbc5b21214bf40ab68"
+rev = "99706e1ab14f79a915b3fd86ffa37da4a800a0d6"
 
 [[require]]
 name = "HexRowReduce"
 git = "https://github.com/leanprover/hex-row-reduce.git"
-rev = "176a31945c321d8268d5b340851d98b8f1bc7c8d"
+rev = "a8a68ac76be7183dd985b096b77128425c32cd40"
 
 [[require]]
 name = "HexDeterminant"
 git = "https://github.com/leanprover/hex-determinant.git"
-rev = "3d6cef2a31a718debcf20c78124f81e2c19ced75"
+rev = "dfdee92c40a5e2c3ccc04661853f70282842345c"
 
 [[require]]
 name = "HexBareiss"
 git = "https://github.com/leanprover/hex-bareiss.git"
-rev = "50cdc4d49bdd47df3f09f18490866551fc7dd62b"
+rev = "0a8d038cf0f676d81aa5290f618b15e50db59c26"
 
 [[lean_lib]]
 name = "HexGramSchmidt"
