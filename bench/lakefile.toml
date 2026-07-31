@@ -1,6 +1,11 @@
 name = "hex-gram-schmidt-bench"
 defaultTargets = ["hexgramschmidt_bench"]
 
+leanOptions = [
+  { name = "doc.verso", value = true },
+  { name = "doc.verso.suggestions", value = false },
+]
+
 [[require]]
 name = "HexGramSchmidt"
 path = ".."
@@ -8,7 +13,7 @@ path = ".."
 [[require]]
 name = "lean-bench"
 git = "https://github.com/kim-em/lean-bench.git"
-rev = "fa30c2763cf523f3ac8e46dc3a1dad0845a40098"
+rev = "master"
 
 [[lean_exe]]
 name = "hexgramschmidt_bench"

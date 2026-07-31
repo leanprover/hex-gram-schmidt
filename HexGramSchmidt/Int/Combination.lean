@@ -13,7 +13,7 @@ public section
 
 namespace Hex
 namespace GramSchmidt.Int
-/-! ### Prefix coefficient vector for integer row combinations -/
+/-! # Prefix coefficient vector for integer row combinations -/
 
 /-- Cast the first `k.val + 1` entries of an integer coefficient vector into a
 rational prefix coefficient vector. Used to package an integer row combination
@@ -53,7 +53,8 @@ private theorem vecMul_int_getElem
   show (Matrix.transpose b * c)[col] = _
   rw [Matrix.getElem_mulVec]
   show ((Matrix.transpose b).row col).dotProduct c = _
-  simp [Vector.dotProduct, Matrix.row, Matrix.transpose, Matrix.col, Hex.Matrix.getRow, Fin.getElem_fin]
+  rw [Matrix.row_transpose]
+  simp [Vector.dotProduct, Matrix.col]
 
 /-- Entry expansion of the cast prefix row combination. The `(j + 1)`-row prefix
 of `castIntMatrix b` combined with `prefixCoeffsCast c k` reads out as a sum of
@@ -70,9 +71,9 @@ private theorem vecMul_prefix_castIntMatrix_getElem
   show (Matrix.transpose _ * _)[col] = _
   rw [Matrix.getElem_mulVec]
   show ((Matrix.transpose _).row col).dotProduct _ = _
+  rw [Matrix.row_transpose]
   simp [Vector.dotProduct, GramSchmidt.prefixRows,
-    castIntMatrix, prefixCoeffsCast, Matrix.row, Matrix.transpose, Matrix.col,
-    Hex.Matrix.getRow, Fin.getElem_fin]
+    castIntMatrix, prefixCoeffsCast, Matrix.row, Matrix.col]
 
 /-- Cast row-combination prefix-span truncation. If an integer coefficient
 vector has all entries above index `k` equal to zero, the cast of the integer
@@ -160,20 +161,19 @@ Gram-Schmidt basis rows: `coeffs b * basis b` collapses to the cast input
 `castIntMatrix b`. -/
 @[simp, grind =] theorem coeffs_mul_basis_eq_castIntMatrix (b : Matrix Int n m) :
     coeffs b * basis b = castIntMatrix b := by
-  apply Hex.Matrix.ext
-  apply Vector.ext
-  intro i hi
-  let ii : Fin n := ⟨i, hi⟩
-  apply Vector.ext
-  intro j hj
-  let jj : Fin m := ⟨j, hj⟩
+  apply Hex.Matrix.ext_getElem
+  intro ii jj
+  let i := ii.val
+  have hi : i < n := ii.isLt
+  let j := jj.val
+  have hj : j < m := jj.isLt
   have hdec := basis_decomposition b i hi
   have hentry :
       ((basis b).row ii)[jj] +
         (GramSchmidt.prefixCombination (coeffs b) (basis b) i hi)[jj] =
       ((castIntMatrix b).row ii)[jj] := by
     have hdecj := congrArg (fun v : Vector Rat m => v[jj]) hdec
-    simpa [castIntMatrix, Matrix.row, Vector.getElem_add, Hex.Matrix.getRow, Fin.getElem_fin] using hdecj.symm
+    simpa [castIntMatrix, Matrix.row, Vector.getElem_add] using hdecj.symm
   show (coeffs b * basis b)[ii][jj] = (castIntMatrix b)[ii][jj]
   rw [Matrix.getElem_mul]
   unfold Vector.dotProduct
@@ -259,6 +259,23 @@ Gram-Schmidt basis rows: `coeffs b * basis b` collapses to the cast input
   rw [← hentry']
   exact Lean.Grind.Semiring.add_comm _ _
 
+/-- Row form of the Gram--Schmidt triangular factorization: the cast input row
+is the row of Gram--Schmidt coefficients applied to the orthogonal basis. -/
+theorem row_reconstruction (b : Matrix Int n m) (i : Fin n) :
+    Vector.map (fun x : Int => (x : Rat)) (b.row i) =
+      Matrix.vecMul ((coeffs b).row i) (basis b) := by
+  have hmat := coeffs_mul_basis_eq_castIntMatrix b
+  apply Vector.ext
+  intro j hj
+  let jj : Fin m := ⟨j, hj⟩
+  have hentry := congrArg (fun M : Matrix Rat n m => M[i][jj]) hmat
+  rw [Matrix.getElem_mul] at hentry
+  have hcoord : ((b.row i)[jj] : Rat) =
+      (Matrix.vecMul ((coeffs b).row i) (basis b))[jj] := by
+    rw [Matrix.vecMul, Matrix.getElem_mulVec, Matrix.row_transpose]
+    simpa [castIntMatrix, Matrix.row, Vector.dotProduct_comm] using hentry.symm
+  simpa [Vector.getElem_map] using hcoord
+
 /-- Integer row combinations reconstruct through the Gram-Schmidt basis after
 first combining the Gram-Schmidt coefficient rows. -/
 theorem vecMul_basis_coeffs_reconstruction
@@ -287,9 +304,8 @@ theorem vecMul_basis_coeffs_reconstruction
     rw [show ((0 : Int) : Rat) = 0 by norm_cast]
     show _ = (Matrix.transpose (castIntMatrix b) *
         Vector.map (fun x : Int => (x : Rat)) c)[jj]
-    rw [Matrix.getElem_mulVec]
-    simp [Vector.dotProduct, Matrix.row, Matrix.transpose,
-      Matrix.col, castIntMatrix, Hex.Matrix.getRow, Fin.getElem_fin]
+    rw [Matrix.getElem_mulVec, Matrix.row_transpose]
+    simp [Vector.dotProduct, Matrix.col, castIntMatrix]
   rw [hleft, ← hcoeff]
   change ((Matrix.transpose (coeffs b * basis b)) *
       Vector.map (fun x : Int => (x : Rat)) c)[jj] =
@@ -494,7 +510,7 @@ theorem exists_top_index_normSq_le_of_memLattice
   rw [← hnorm]
   exact hle
 
-/-! ### Dot-product symmetry support -/
+/-! # Dot-product symmetry support -/
 
 private theorem foldl_dot_comm_int {n' : Nat} (xs : List (Fin n'))
     (u v : Vector Int n') (accU accV : Int) (hacc : accU = accV) :
@@ -520,11 +536,7 @@ swapped index. Consumed by the no-pivot Bareiss symmetry/transpose argument for
 bordered minors of `gramMatrix b`. -/
 private theorem gramMatrix_symm (b : Matrix Int n m) (a c : Fin n) :
     (Matrix.gramMatrix b)[a][c] = (Matrix.gramMatrix b)[c][a] := by
-  show (Matrix.ofFn fun i j => Vector.dotProduct
-        (Matrix.row b i) (Matrix.row b j))[a][c]
-    = (Matrix.ofFn fun i j => Vector.dotProduct
-        (Matrix.row b i) (Matrix.row b j))[c][a]
-  simp [Matrix.ofFn, Vector.getElem_ofFn]
+  rw [Matrix.getElem_gramMatrix, Matrix.getElem_gramMatrix]
   exact dot_comm_int _ _
 
 /-- The Cramer determinant matrix for the scaled Gram-Schmidt coefficient
@@ -539,17 +551,8 @@ theorem scaledCoeffMatrix_eq_borderedMinor
       Matrix.borderedMinor (Matrix.gramMatrix b) j.val
         (Nat.lt_trans hji i.isLt)
         ⟨j.val, Nat.lt_trans hji i.isLt⟩ i := by
-  apply Hex.Matrix.ext
-  apply Vector.ext
-  intro r hr
-  apply Vector.ext
-  intro c hc
-  let pp : Fin (j.val + 1) := ⟨r, hr⟩
-  let cc : Fin (j.val + 1) := ⟨c, hc⟩
-  show (GramSchmidt.scaledCoeffMatrix b i j hji)[pp][cc] =
-    (Matrix.borderedMinor (Matrix.gramMatrix b) j.val
-        (Nat.lt_trans hji i.isLt)
-        ⟨j.val, Nat.lt_trans hji i.isLt⟩ i)[pp][cc]
+  apply Hex.Matrix.ext_getElem
+  intro pp cc
   -- Case split on whether the column index is the border (= j.val) or interior.
   by_cases hcj : cc.val < j.val
   · -- Interior column: both sides are `gramMatrix[r'][c']` with the
@@ -564,8 +567,8 @@ theorem scaledCoeffMatrix_eq_borderedMinor
             (Matrix.row b ⟨cc.val, Nat.lt_of_lt_of_le cc.isLt
               (Nat.succ_le_of_lt (Nat.lt_trans hji i.isLt))⟩) := by
         have hcc_ne : cc.val ≠ j.val := Nat.ne_of_lt hcj
-        simp [GramSchmidt.scaledCoeffMatrix, Matrix.ofFn, GramSchmidt.liftFinLE, hcc_ne,
-          Hex.Matrix.getRow, Fin.getElem_fin]
+        simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn]
+        simp [GramSchmidt.liftFinLE, hcc_ne]
       have h_bm : (Matrix.borderedMinor (Matrix.gramMatrix b) j.val
             (Nat.lt_trans hji i.isLt)
             ⟨j.val, Nat.lt_trans hji i.isLt⟩ i)[pp][cc] =
@@ -575,9 +578,7 @@ theorem scaledCoeffMatrix_eq_borderedMinor
         rw [Matrix.borderedMinor_entry_lt_lt (Matrix.gramMatrix b) j.val
           (Nat.lt_trans hji i.isLt) ⟨j.val, Nat.lt_trans hji i.isLt⟩ i pp cc hrj hcj]
         simp [Hex.Matrix.getElem_pair_eq_nested]
-      rw [h_sc, h_bm]
-      simp [Matrix.gramMatrix, Matrix.ofFn, Vector.getElem_ofFn, Vector.dotProduct,
-        Hex.Matrix.getRow, Fin.getElem_fin]
+      rw [h_sc, h_bm, Matrix.getElem_gramMatrix]
     · -- pp.val = j.val (since not < j.val and bounded by j.val + 1).
       have hpr : pp.val = j.val :=
         Nat.le_antisymm (Nat.lt_succ_iff.mp pp.isLt) (Nat.le_of_not_lt hrj)
@@ -588,15 +589,16 @@ theorem scaledCoeffMatrix_eq_borderedMinor
             (Matrix.row b ⟨cc.val, Nat.lt_of_lt_of_le cc.isLt
               (Nat.succ_le_of_lt (Nat.lt_trans hji i.isLt))⟩) := by
         have hcc_ne : cc.val ≠ j.val := Nat.ne_of_lt hcj
-        simp [GramSchmidt.scaledCoeffMatrix, Matrix.ofFn, GramSchmidt.liftFinLE, hcc_ne,
-          Hex.Matrix.getRow, Fin.getElem_fin]
+        simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn]
+        simp [GramSchmidt.liftFinLE, hcc_ne]
       have h_bm : (Matrix.borderedMinor (Matrix.gramMatrix b) j.val
             (Nat.lt_trans hji i.isLt)
             ⟨j.val, Nat.lt_trans hji i.isLt⟩ i)[pp][cc] =
           (Matrix.gramMatrix b)[(⟨j.val, Nat.lt_trans hji i.isLt⟩ : Fin n)][
             (⟨cc.val, Nat.lt_trans hcj (Nat.lt_trans hji i.isLt)⟩ : Fin n)] := by
         have hpr_not : ¬ pp.val < j.val := Nat.not_lt.mpr (Nat.le_of_eq hpr.symm)
-        simp [Matrix.borderedMinor, Matrix.ofFn, Vector.getElem_ofFn, hpr_not, hcj]
+        simp only [Matrix.borderedMinor, Matrix.getElem_ofFn]
+        simp [hpr_not, hcj]
       rw [h_sc, h_bm, Matrix.getElem_gramMatrix]
       have hrow : (⟨pp.val, Nat.lt_of_lt_of_le pp.isLt
           (Nat.succ_le_of_lt (Nat.lt_trans hji i.isLt))⟩ : Fin n)
@@ -611,16 +613,16 @@ theorem scaledCoeffMatrix_eq_borderedMinor
             (Matrix.row b ⟨pp.val, Nat.lt_of_lt_of_le pp.isLt
               (Nat.succ_le_of_lt (Nat.lt_trans hji i.isLt))⟩)
             (Matrix.row b i) := by
-        simp [GramSchmidt.scaledCoeffMatrix, Matrix.ofFn, GramSchmidt.liftFinLE, hcj_eq]
+        simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn]
+        simp [GramSchmidt.liftFinLE, hcj_eq]
       have h_bm : (Matrix.borderedMinor (Matrix.gramMatrix b) j.val
             (Nat.lt_trans hji i.isLt)
             ⟨j.val, Nat.lt_trans hji i.isLt⟩ i)[pp][cc] =
           (Matrix.gramMatrix b)[
             (⟨pp.val, Nat.lt_trans hrj (Nat.lt_trans hji i.isLt)⟩ : Fin n)][i] := by
-        simp [Matrix.borderedMinor, Matrix.ofFn, Vector.getElem_ofFn, hrj, hcj]
-      rw [h_sc, h_bm]
-      simp [Matrix.gramMatrix, Matrix.ofFn, Vector.getElem_ofFn, Vector.dotProduct,
-        Hex.Matrix.getRow, Fin.getElem_fin]
+        simp only [Matrix.borderedMinor, Matrix.getElem_ofFn]
+        simp [hrj, hcj]
+      rw [h_sc, h_bm, Matrix.getElem_gramMatrix]
     · -- pp.val = j.val and cc.val = j.val: corner case.
       have hpr_eq : pp.val = j.val :=
         Nat.le_antisymm (Nat.lt_succ_iff.mp pp.isLt) (Nat.le_of_not_lt hrj)
@@ -629,13 +631,15 @@ theorem scaledCoeffMatrix_eq_borderedMinor
             (Matrix.row b ⟨pp.val, Nat.lt_of_lt_of_le pp.isLt
               (Nat.succ_le_of_lt (Nat.lt_trans hji i.isLt))⟩)
             (Matrix.row b i) := by
-        simp [GramSchmidt.scaledCoeffMatrix, Matrix.ofFn, GramSchmidt.liftFinLE, hcj_eq]
+        simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn]
+        simp [GramSchmidt.liftFinLE, hcj_eq]
       have h_bm : (Matrix.borderedMinor (Matrix.gramMatrix b) j.val
             (Nat.lt_trans hji i.isLt)
             ⟨j.val, Nat.lt_trans hji i.isLt⟩ i)[pp][cc] =
           (Matrix.gramMatrix b)[(⟨j.val, Nat.lt_trans hji i.isLt⟩ : Fin n)][i] := by
         have hpr_not : ¬ pp.val < j.val := hrj
-        simp [Matrix.borderedMinor, Matrix.ofFn, Vector.getElem_ofFn, hpr_not, hcj]
+        simp only [Matrix.borderedMinor, Matrix.getElem_ofFn]
+        simp [hpr_not, hcj]
       rw [h_sc, h_bm, Matrix.getElem_gramMatrix]
       have hrow : (⟨pp.val, Nat.lt_of_lt_of_le pp.isLt
           (Nat.succ_le_of_lt (Nat.lt_trans hji i.isLt))⟩ : Fin n)
@@ -670,8 +674,8 @@ full Gram matrix has not recorded a singular step before reaching column `j`,
 the executable scaled-coefficient array entry below the diagonal at `(i, j)`
 matches the trailing entry of the no-pivot Bareiss-style loop on the
 corresponding Cramer determinant matrix `scaledCoeffMatrix b i j hji`. This
-composes `scaledCoeffArrayLoop_lower_matches_target_column` (from #4103),
-`noPivotLoop_full_eq_borderedMinor_at_trailing` (from #4028), and the
+composes `scaledCoeffArrayLoop_lower_matches_target_column`,
+`noPivotLoop_full_eq_borderedMinor_at_trailing`, and the
 symmetry/transpose equation `noPivotLoop_scaledCoeffMatrix_eq`. -/
 theorem scaledCoeffRows_lower_eq_noPivotLoop_scaledCoeffMatrix
     (b : Matrix Int n m) (i j : Fin n) (hji : j.val < i.val)
@@ -1037,7 +1041,7 @@ private theorem noPivotLoop_initial_gram_diag_ne_zero
       Matrix.noPivotLoop 1 (Matrix.noPivotLoop q state₀) =
         { (Matrix.noPivotLoop q state₀) with
           singularStep := some (Matrix.noPivotLoop q state₀).step } :=
-    Matrix.noPivotLoop_singular_branch 0 _ hDone hp_at_step
+    Matrix.noPivotLoop_of_singular 0 _ hDone hp_at_step
   have h_q_plus_one :
       Matrix.noPivotLoop (q + 1) state₀ =
         Matrix.noPivotLoop 1 (Matrix.noPivotLoop q state₀) :=
@@ -1165,10 +1169,15 @@ private theorem schurSigma_foldl_eq
           (b := b) p_out 0 hp_out_pos hp_out_n h_nonsing
       simp only [Matrix.noPivotInitialState]
       exact key
-    rw [Matrix.noPivotLoop_regular_branch 0
+    rw [Matrix.noPivotLoop_of_regular 0
         (Matrix.noPivotInitialState (Matrix.gramMatrix b)) hDone hpivot]
     simp [Matrix.noPivotLoop_zero_fuel, Matrix.noPivotInitialState]
-    simp [Matrix.stepMatrix_eq_ofFn, Matrix.exactDiv, Matrix.ofFn, h0a, hp_out_pos,
+    have hofFn : ∀ (f : Fin n → Fin n → Int) (r : Fin n) (jj : Nat) (hjj : jj < n),
+        ((Matrix.ofFn f).getRow r)[jj] = f r ⟨jj, hjj⟩ := by
+      intro f r jj hjj
+      rw [← Hex.Matrix.getElem_eq_getRow]
+      exact Hex.Matrix.getElem_ofFn f r ⟨jj, hjj⟩
+    simp [Matrix.stepMatrix_eq_ofFn, Matrix.exactDiv, hofFn, h0a, hp_out_pos,
       h_rows_a0, h_rows_p0]
     grind
   | succ q' ih =>
@@ -1266,9 +1275,9 @@ private theorem schurSigma_foldl_eq
               (⟨(Matrix.noPivotLoop q' state₀).step,
                   Nat.lt_of_succ_lt hDone⟩ : Fin n)] ≠ 0 :=
         h_eq_diag ▸ h_diag_at_q'
-      rw [h_add, Matrix.noPivotLoop_regular_branch 0 _ hDone h_diag_at_step,
+      rw [h_add, Matrix.noPivotLoop_of_regular 0 _ hDone h_diag_at_step,
         Matrix.noPivotLoop_zero_fuel]
-      -- The `noPivotLoop_regular_branch` rewrite makes the goal:
+      -- The `noPivotLoop_of_regular` rewrite makes the goal:
       --   matrix[⟨step, ⋯⟩][⟨step, ⋯⟩] = matrix[⟨q', hq'_n⟩][⟨q', hq'_n⟩]
       -- which we close by the index equality.
       exact congrArg
@@ -1321,7 +1330,7 @@ private theorem schurSigma_foldl_eq
             (fun (i : Fin n) =>
               (Matrix.noPivotLoop (q' + 1) state₀).matrix[i][i]) h_idx
         exact h_eq ▸ h_diag
-      rw [Matrix.noPivotLoop_regular_branch 0 _ hDone hp,
+      rw [Matrix.noPivotLoop_of_regular 0 _ hDone hp,
         Matrix.noPivotLoop_zero_fuel]
       have ha : (Matrix.noPivotLoop (q' + 1) state₀).step < a := by
         rw [h_step_q'_succ]; exact hp_a_lt
@@ -2045,27 +2054,19 @@ theorem scaledCoeffMatrix_rowSwap_adjacent_pivot_transpose
   let t := km1.val + 1
   let ht : t ≤ n := Nat.succ_le_of_lt km1.isLt
   let last : Fin t := ⟨km1.val, Nat.lt_succ_self km1.val⟩
-  apply Hex.Matrix.ext
-  apply Vector.ext
-  intro r hr
-  apply Vector.ext
-  intro c hc
-  let p : Fin t := ⟨r, hr⟩
-  let q : Fin t := ⟨c, hc⟩
-  change
-    (GramSchmidt.scaledCoeffMatrix (Matrix.rowSwap b km1 k) k km1 hkm1k)[p][q] =
-      ((GramSchmidt.scaledCoeffMatrix b k km1 hkm1k).transpose)[p][q]
+  apply Hex.Matrix.ext_getElem
+  intro p q
   have hp_lt_k : p.val < k.val := by
-    dsimp [p, t]
+    have := p.isLt
     omega
   have hq_lt_k : q.val < k.val := by
-    dsimp [q, t]
+    have := q.isLt
     omega
   have hp_ne_k : (GramSchmidt.liftFinLE p ht).val ≠ k.val := by
-    dsimp [GramSchmidt.liftFinLE, p, t]
+    dsimp [GramSchmidt.liftFinLE]
     omega
   have hq_ne_k : (GramSchmidt.liftFinLE q ht).val ≠ k.val := by
-    dsimp [GramSchmidt.liftFinLE, q, t]
+    dsimp [GramSchmidt.liftFinLE]
     omega
   have hlast_val : last.val = km1.val := rfl
   by_cases hq_last : q = last
@@ -2078,20 +2079,13 @@ theorem scaledCoeffMatrix_rowSwap_adjacent_pivot_transpose
       have hq_lift : GramSchmidt.liftFinLE q ht = km1 := by
         apply Fin.ext
         simpa [last, GramSchmidt.liftFinLE] using congrArg Fin.val hq_last
-      dsimp [GramSchmidt.scaledCoeffMatrix, Matrix.transpose, Matrix.col,
-        Matrix.row, Matrix.ofFn]
-      repeat rw [Vector.getElem_ofFn]
+      rw [Matrix.getElem_transpose]
+      simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn, Matrix.row]
       rw [if_pos hq_val, if_pos (by simpa [last] using congrArg Fin.val hp_last),
         rowSwap_getRow_right_val_int]
-      rw [show (GramSchmidt.liftFinLE (⟨p.val, hr⟩ : Fin t) _) = km1 by
-        apply Fin.ext
-        dsimp [GramSchmidt.liftFinLE]
-        omega]
+      rw [hp_lift]
       rw [rowSwap_getRow_left_val_int]
-      rw [show (GramSchmidt.liftFinLE (⟨q.val, hc⟩ : Fin t) _) = km1 by
-        apply Fin.ext
-        dsimp [GramSchmidt.liftFinLE]
-        omega]
+      rw [hq_lift]
       exact dot_comm_int _ _
     · have hp_ne_km1 : (GramSchmidt.liftFinLE p ht).val ≠ km1.val := by
         intro h
@@ -2102,15 +2096,11 @@ theorem scaledCoeffMatrix_rowSwap_adjacent_pivot_transpose
       have hp_val_ne : p.val ≠ km1.val := by
         intro h
         exact hp_last (Fin.ext (by simpa [last] using h))
-      dsimp [GramSchmidt.scaledCoeffMatrix, Matrix.transpose, Matrix.col,
-        Matrix.row, Matrix.ofFn]
-      repeat rw [Vector.getElem_ofFn]
+      rw [Matrix.getElem_transpose]
+      simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn, Matrix.row]
       rw [if_pos hq_val, if_neg hp_val_ne, rowSwap_getRow_right_val_int,
         rowSwap_getRow_eq_of_ne_val_int]
-      · rw [show (GramSchmidt.liftFinLE q _) = km1 by
-          apply Fin.ext
-          dsimp [GramSchmidt.liftFinLE]
-          omega]
+      · rw [hq_lift]
         exact dot_comm_int _ _
       · dsimp [GramSchmidt.liftFinLE]
         omega
@@ -2128,14 +2118,10 @@ theorem scaledCoeffMatrix_rowSwap_adjacent_pivot_transpose
       have hq_ne_km1 : (GramSchmidt.liftFinLE q ht).val ≠ km1.val := by
         intro h
         exact hq_ne_val (by simpa [GramSchmidt.liftFinLE] using h)
-      dsimp [GramSchmidt.scaledCoeffMatrix, Matrix.transpose, Matrix.col,
-        Matrix.row, Matrix.ofFn]
-      repeat rw [Vector.getElem_ofFn]
+      rw [Matrix.getElem_transpose]
+      simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn, Matrix.row]
       rw [if_neg hq_ne_val, if_pos hp_val]
-      rw [show (GramSchmidt.liftFinLE (⟨p.val, hr⟩ : Fin t) _) = km1 by
-        apply Fin.ext
-        dsimp [GramSchmidt.liftFinLE]
-        omega]
+      rw [hp_lift]
       rw [rowSwap_getRow_left_val_int, rowSwap_getRow_eq_of_ne_val_int]
       · exact dot_comm_int _ _
       · dsimp [GramSchmidt.liftFinLE]
@@ -2151,9 +2137,8 @@ theorem scaledCoeffMatrix_rowSwap_adjacent_pivot_transpose
       have hq_ne_km1 : (GramSchmidt.liftFinLE q ht).val ≠ km1.val := by
         intro h
         exact hq_ne_val (by simpa [GramSchmidt.liftFinLE] using h)
-      dsimp [GramSchmidt.scaledCoeffMatrix, Matrix.transpose, Matrix.col,
-        Matrix.row, Matrix.ofFn]
-      repeat rw [Vector.getElem_ofFn]
+      rw [Matrix.getElem_transpose]
+      simp only [GramSchmidt.scaledCoeffMatrix, Matrix.getElem_ofFn, Matrix.row]
       rw [if_neg hq_ne_val, if_neg hp_ne_val, rowSwap_getRow_eq_of_ne_val_int]
       · rw [rowSwap_getRow_eq_of_ne_val_int]
         · exact dot_comm_int _ _
@@ -2166,7 +2151,7 @@ theorem scaledCoeffMatrix_rowSwap_adjacent_pivot_transpose
       · dsimp [GramSchmidt.liftFinLE]
         omega
 
-/-! ### Coefficient bordered minor and multilinearity entry equation
+/-! # Coefficient bordered minor and multilinearity entry equation
 
 The `coeffBM` matrix shares its first `k` columns with `borderedMinor G k hk i j`
 (those columns do not depend on `j`) and replaces the last column with the

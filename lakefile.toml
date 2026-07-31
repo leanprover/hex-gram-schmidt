@@ -1,30 +1,35 @@
 name = "hex-gram-schmidt"
 defaultTargets = ["HexGramSchmidt"]
 
+leanOptions = [
+  { name = "doc.verso", value = true },
+  { name = "doc.verso.suggestions", value = false },
+]
+
 [[require]]
 name = "HexBasic"
 git = "https://github.com/leanprover/hex-basic.git"
-rev = "f1580d28c2e9ff9e8d4d7cdef9dccbaa17780b03"
+rev = "a3ab4fd9a79efbe6b07337836b3b5828d22d65a6"
 
 [[require]]
 name = "HexMatrix"
 git = "https://github.com/leanprover/hex-matrix.git"
-rev = "d45bf749d6283726b8df43b5be9e6dde350666d6"
+rev = "9b6ec9285021793e9f43e1c7b3b37da957b6f2c4"
 
 [[require]]
 name = "HexRowReduce"
 git = "https://github.com/leanprover/hex-row-reduce.git"
-rev = "a5b4db02cadc7a1e60e2ae7e085cb6facf415ee0"
+rev = "79b2be598fa85f5e57c6f0b213419c948c07f656"
 
 [[require]]
 name = "HexDeterminant"
 git = "https://github.com/leanprover/hex-determinant.git"
-rev = "20f5785e9c85e9faa481d6b67c1382b6655b842e"
+rev = "f86320a1285796c94cb42c42afb04fde53c33234"
 
 [[require]]
 name = "HexBareiss"
 git = "https://github.com/leanprover/hex-bareiss.git"
-rev = "0317e62974acadbb68caf1f57defcc90cfe80b99"
+rev = "e21c06404d9f821a2bfd5809aa92c1d8be3a0035"
 
 [[lean_lib]]
 name = "HexGramSchmidt"

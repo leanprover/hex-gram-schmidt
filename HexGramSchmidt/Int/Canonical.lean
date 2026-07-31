@@ -13,7 +13,7 @@ public section
 
 namespace Hex
 namespace GramSchmidt.Int
-/-! ### Gram row-span invariant for no-pivot Bareiss -/
+/-! # Gram row-span invariant for no-pivot Bareiss -/
 
 /-- Row-vector interpretation of the trailing block during a no-pivot Bareiss
 pass over a Gram matrix.  Each active trailing row carries an explicit integer
@@ -51,7 +51,8 @@ def bareissGramRowInvariant_initial (b : Matrix Int n m) :
           b.row i :=
       Matrix.IsRowReduced.vecMul_single (M := b) i
     rw [hsingle]
-    simp [Matrix.noPivotInitialState, Matrix.gramMatrix, Matrix.ofFn, Vector.dotProduct]
+    simp only [Matrix.noPivotInitialState]
+    rw [Matrix.getElem_gramMatrix]
 
 /-- `foldl_sum_bareiss_row_update` pulls a Bareiss left row-update through a folded sum for later dot-product identities. -/
 private theorem foldl_sum_bareiss_row_update
@@ -301,7 +302,7 @@ theorem bareissGramRowInvariantStepCoeff_support
     simpa [k] using hck
   simp [hciNat, hckNat, Matrix.exactDiv]
 
-/-! ### Canonical coefficient vector and canonicity predicate -/
+/-! # Canonical coefficient vector and canonicity predicate -/
 
 /-- Canonical row-coefficient vector for the initial no-pivot Gram trajectory.
 
@@ -374,6 +375,7 @@ at `fuel + 1` to its explicit Bareiss exact-division update. -/
            state.prevPivot) := by
   simp [bareissGramCanonicalCoeff, dif_pos hnext, if_pos hi]
   intro hc
+  simp only [Matrix.getElem_nat_eq_getRow] at hp
   exact absurd hc hp
 
 /-- Recursion equation: regular-branch processed-row case. An already-processed
@@ -416,6 +418,7 @@ update, so the canonical coefficient at `fuel + 1` collapses to the one at
       bareissGramCanonicalCoeff b fuel i := by
   simp [bareissGramCanonicalCoeff, dif_pos hnext]
   intro hc
+  simp only [Matrix.getElem_nat_eq_getRow] at hp
   exact absurd hp hc
 
 /-- Recursion equation: done branch (no further work possible). Once the loop can
@@ -436,7 +439,7 @@ is *canonical at `fuel`* when every row's coefficient vector matches
 kernel vector while keeping `entry_eq_dot` satisfied) cannot invoke the
 witness's quotient identity.
 
-The SPEC counterexample at rows `(1,1), (1,0), (-1,-1)` (#6505) produces two
+The rows `(1,1), (1,0), (-1,-1)` produce two
 distinct `BareissGramRowInvariant` instances at the same loop state whose
 coefficient vectors differ by the kernel vector. Both satisfy `entry_eq_dot`,
 but only one (the canonical one) yields an integer Bareiss-step quotient. -/
@@ -556,7 +559,9 @@ private theorem bareissGramRegularStep_entry_eq_dot
       apply Vector.ext
       intro a ha
       rw [Vector.getElem_ofFn, Vector.getElem_ofFn]
-      exact (hq.coeff_num_eq_mul ⟨a, ha⟩).symm
+      have h := (hq.coeff_num_eq_mul ⟨a, ha⟩).symm
+      simp only [Matrix.getElem_pair_eq_nested] at h
+      exact h
     rw [h_q_eq_num]
     exact h_dot_num.symm
   -- Case split on `j.val` against `state.step`.
@@ -788,7 +793,7 @@ private theorem noPivotLoop_matrix_processed_col_eq_zero {n : Nat} (fuel : Nat) 
       by_cases hDone : state.step + 1 < n
       · by_cases hp : state.matrix[state.step][state.step] = 0
         · -- Singular branch contradicts h_result_none.
-          rw [Matrix.noPivotLoop_singular_branch f state hDone hp] at h_result_none
+          rw [Matrix.noPivotLoop_of_singular f state hDone hp] at h_result_none
           simp at h_result_none
         · -- Regular branch.
           let next : Matrix.BareissState n :=
@@ -800,7 +805,7 @@ private theorem noPivotLoop_matrix_processed_col_eq_zero {n : Nat} (fuel : Nat) 
               singularStep := none }
           have h_eq_next : Matrix.noPivotLoop (f + 1) state =
               Matrix.noPivotLoop f next :=
-            Matrix.noPivotLoop_regular_branch f state hDone hp
+            Matrix.noPivotLoop_of_regular f state hDone hp
           rw [h_eq_next] at h_result_none hk_lt ⊢
           by_cases hk_eq : k = state.step
           · -- k just got processed: column k was zeroed by stepMatrix.
@@ -894,7 +899,7 @@ restricted to *canonical* row-coefficient witnesses via `IsCanonicalAt`.
 canonicity gate (`h_canon`) prevents non-canonical `BareissGramRowInvariant`
 witnesses — which can shift coefficients by a kernel vector while still
 satisfying `entry_eq_dot` — from supplying integer quotients. The kernel-shift
-counterexample (SPEC #6505: rows `(1,1), (1,0), (-1,-1)` at row 2 step 1)
+counterexample with rows `(1,1), (1,0), (-1,-1)` at row 2 step 1
 shows the restriction is necessary: distinct non-canonical witnesses produce
 numerators differing by `1`, which is not divisible by `prevPivot = 2`. -/
 abbrev StepWitness.Cell
@@ -1022,7 +1027,7 @@ private theorem bareissGramCanonicalCoeff_eq_of_singular
             singularStep := some (Matrix.noPivotLoop elapsed
               (Matrix.noPivotInitialState (Matrix.gramMatrix b))).step } := by
         rw [noPivotLoop_add elapsed 1]
-        exact Matrix.noPivotLoop_singular_branch 0 _ hDone hp
+        exact Matrix.noPivotLoop_of_singular 0 _ hDone hp
       have h_state_eq :
           Matrix.noPivotLoop (elapsed + 1 + j)
             (Matrix.noPivotInitialState (Matrix.gramMatrix b)) =
