@@ -9,27 +9,27 @@ leanOptions = [
 [[require]]
 name = "HexBasic"
 git = "https://github.com/leanprover/hex-basic.git"
-rev = "da8a864cd17ccca780d8c76af403e88585bc4734"
+rev = "a47240943e925951a676d1a1c2f2a615ae68fdef"
 
 [[require]]
 name = "HexMatrix"
 git = "https://github.com/leanprover/hex-matrix.git"
-rev = "25cfbbd8a689eb782fad408c46a9c1796dd943b2"
+rev = "a99dc4690f411538088463b6db94e38958e65a81"
 
 [[require]]
 name = "HexRowReduce"
 git = "https://github.com/leanprover/hex-row-reduce.git"
-rev = "967216591082d290bc3f9e1b7405effd910bdef9"
+rev = "7550b5334bea67cba65c9a96a87d24557090784f"
 
 [[require]]
 name = "HexDeterminant"
 git = "https://github.com/leanprover/hex-determinant.git"
-rev = "01c471058f6d7b84c4bc37a2d200f264f356328b"
+rev = "2c122657aee7dcd9f7a619dc0d8971a3415e127a"
 
 [[require]]
 name = "HexBareiss"
 git = "https://github.com/leanprover/hex-bareiss.git"
-rev = "4e0b52c59c96f20956db753ed2ed1ed9d11c59c4"
+rev = "23ac1d50878f839e306c2f395a9ac576b352f06b"
 
 [[lean_lib]]
 name = "HexGramSchmidt"
